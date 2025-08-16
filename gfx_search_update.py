@@ -1,10 +1,16 @@
+# Custom imports
 from env import TNO_FOLDER, SOURCES, DESTINATION
-import subprocess
+
+# Imports
 import os
 import shutil
+import subprocess
+import json
+
 
 GFX_NAME = "gfx_name"
 FILEPATH = "filepath"
+
 
 def main():
     # FOR ONLY GOALS
@@ -28,6 +34,10 @@ def main():
     json_from_destination: dict = update_destination(json_from_gfx)
 
     # Write dictionary as JSON file
+    with open("images.json", "w") as json_file:
+        json.dump(
+            json_from_destination, json_file, indent=4
+        )  # indent for pretty-printing
 
     # This will update the destination folder while purging unused images, and create a JSON file that associates each image with its gfx_name
 
@@ -64,12 +74,14 @@ def fill_json_from_gfx(json_from_gfx: dict, filename):
     except FileNotFoundError:
         print(f"Error: Cannot find '{filename}'.")
 
+
 def get_png_name(filename: str):
     if filename[-4:] == ".png":
         return filename
     else:
         return filename.split(".")[0] + ".png"
-    
+
+
 def update_destination(json_from_gfx: dict):
     # Create a new empty dictionary for destination
     json_from_destination: dict = {}
@@ -79,29 +91,34 @@ def update_destination(json_from_gfx: dict):
         entry_filepath: str = os.path.join(TNO_FOLDER, json_from_gfx[entry][FILEPATH])
         destination_filename: str = get_png_name(entry)
         destination_filepath: str = os.path.join(DESTINATION, destination_filename)
-        dest_safe_filepath: str = os.path.join(DESTINATION, "safe_images", destination_filename)
-        #   If entry file does not exist, delete item from dictionary and continue
+        dest_safe_filepath: str = os.path.join(
+            DESTINATION, "safe_images", destination_filename
+        )
+        # Image in .gfx file does not exist
         if not os.path.exists(entry_filepath):
-            print(f"'{entry_filepath}' does not exist, continuing.")
             continue
-        #   Else if destination file does not exist, convert file if needed, move to safe_images, and update filepath and filename (if needed)
+        # Image is not in destination folder
         elif not os.path.exists(destination_filepath):
             magick(entry_filepath, dest_safe_filepath)
             json_from_destination[destination_filename] = {
                 GFX_NAME: json_from_gfx[entry][GFX_NAME],
-                FILEPATH: destination_filepath
+                FILEPATH: destination_filepath,
             }
-        #   Else if entry_file is modified more recently than destination_file, convert if needed, move to safe_images, and update filepath and filename (if needed)
+        # Image in destination folder is outdated
         elif os.path.getmtime(entry_filepath) > os.path.getmtime(destination_filepath):
             magick(entry_filepath, dest_safe_filepath)
             json_from_destination[destination_filename] = {
-                GFX_NAME: json_from_destination[entry][GFX_NAME],
-                FILEPATH: destination_filepath
+                GFX_NAME: json_from_gfx[entry][GFX_NAME],
+                FILEPATH: destination_filepath,
             }
-        #   Else, move destination_file to safe_images and update filepath and filename (if needed)
+        # Image in destination folder is up to date
         else:
             shutil.move(destination_filepath, dest_safe_filepath)
-    
+            json_from_destination[destination_filename] = {
+                GFX_NAME: json_from_gfx[entry][GFX_NAME],
+                FILEPATH: destination_filepath,
+            }
+
     # Delete all files in destination not in safe_images
     for damned_file in os.listdir(DESTINATION):
         damned_filepath = os.path.join(DESTINATION, damned_file)
@@ -109,18 +126,18 @@ def update_destination(json_from_gfx: dict):
             os.remove(damned_filepath)
 
     # Move all files from safe_images to destination
+    print(json_from_destination)
     for saved_filename in os.listdir(os.path.join(DESTINATION, "safe_images")):
         saved_filepath = os.path.join(DESTINATION, "safe_images", saved_filename)
         shutil.move(saved_filepath, json_from_destination[saved_filename][FILEPATH])
-    
+
     # Delete safe_images
     os.rmdir(os.path.join(DESTINATION, "safe_images"))
 
     return json_from_destination
 
 def magick(source_image: str, destination_image: str):
-    command: str = f"magick {source_image} {destination_image}"
-    print(command)
+    subprocess.run(["magick", source_image, destination_image])
 
 
 if __name__ == "__main__":
