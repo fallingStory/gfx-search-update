@@ -72,7 +72,11 @@ def fill_dict_gfx(dict_gfx: dict, filename):
             for preprocessed_line in file:
                 # Figure out what to do with line in file
                 line = preprocessed_line.strip()
-                if line[-1] == "{":
+                if line == "":
+                    continue
+                elif line[0] == "#":
+                    continue
+                elif line[-1] == "{":
                     open_bracket = True
                 elif line[-1] == "}":
                     if open_bracket:
