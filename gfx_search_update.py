@@ -28,24 +28,31 @@ def main():
     dict_gfx: dict = {}
 
     # Scan through all National Focus .gfx files and add entry for them in dictionary, using filename as entry name and containing gfx_name and filepath
-    print("Scanning through .gfx files.")
-    for filename in SOURCES:
-        fill_dict_gfx(dict_gfx, filename)
-    print(f"Scan complete. {len(dict_gfx)} images found.\n")
+    for category_key in SOURCES:
+        category = SOURCES[category_key]
+        dict_gfx[category_key] = {}
+        print(f"Scanning through .gfx files for '{category_key}'")
+        for filename in category:
+            fill_dict_gfx(dict_gfx[category_key], filename)
+        print(f"Scan complete for '{category_key}'. {len(dict_gfx[category_key])} images found.\n")
 
-    # Create directory "safe_images" in destination folder
-    try:
-        os.mkdir(f"{DESTINATION}/safe_images")
-    except FileNotFoundError:
-        print(f"Error: Destination folder '${DESTINATION}' does not exist.")
-        return
-    except FileExistsError:
-        pass
+    dict_dest: dict = {}
+    for category_key in SOURCES:
+        sub_dest = os.path.join(DESTINATION, category_key)
+        if not os.path.exists(sub_dest):
+            try:
+                os.mkdir(sub_dest)
+            except FileNotFoundError:
+                print(f"Error: Destination folder '${DESTINATION}' does not exist.")
+                return
 
-    # Update the destination folder
-    print("Beginning update proccess.")
-    dict_dest: dict = update_destination(dict_gfx)
-    print("Update proccess finished.\n")
+        # Create directory "safe_images" in destination folder
+        os.mkdir(os.path.join(sub_dest, "safe_images"))
+
+        # Update the destination folder
+        print(f"Beginning update proccess for '{category_key}'.")
+        dict_dest[category_key] = update_destination(dict_gfx[category_key], sub_dest)
+        print(f"Update proccess for '{category_key}' finished.\n")
 
     # Write dictionary as JSON file
     with open("images.json", "w") as json_file:
@@ -98,7 +105,7 @@ def fill_dict_gfx(dict_gfx: dict, filename):
         print(f"Error: Cannot find '{filename}'.")
 
 
-def update_destination(dict_gfx: dict):
+def update_destination(dict_gfx: dict, sub_dest: str):
     # Create an empty dictionary based on the destination folder
     dict_dest: dict = {}
 
@@ -108,34 +115,34 @@ def update_destination(dict_gfx: dict):
     for entry in dict_gfx:
         entry_filepath: str = os.path.join(TNO_FOLDER, dict_gfx[entry][FILEPATH])
         if os.path.exists(entry_filepath):
-            update_dest_image(dict_dest, dict_gfx, entry_filepath, entry)
+            update_dest_image(dict_dest, dict_gfx, entry_filepath, entry, sub_dest)
 
     # Delete all files in destination not in safe_images
-    for damned_file in os.listdir(DESTINATION):
-        damned_filepath = os.path.join(DESTINATION, damned_file)
+    for damned_file in os.listdir(sub_dest):
+        damned_filepath = os.path.join(sub_dest, damned_file)
         if os.path.isfile(damned_filepath):
             os.remove(damned_filepath)
 
     # Move all files from safe_images to destination
-    for saved_filename in os.listdir(os.path.join(DESTINATION, "safe_images")):
-        saved_filepath = os.path.join(DESTINATION, "safe_images", saved_filename)
+    for saved_filename in os.listdir(os.path.join(sub_dest, "safe_images")):
+        saved_filepath = os.path.join(sub_dest, "safe_images", saved_filename)
         shutil.move(saved_filepath, dict_dest[saved_filename][FILEPATH])
 
     # Delete safe_images
-    os.rmdir(os.path.join(DESTINATION, "safe_images"))
+    os.rmdir(os.path.join(sub_dest, "safe_images"))
 
     return dict_dest
 
 
-def update_dest_image(dict_dest, dict_gfx, entry_filepath, entry):
+def update_dest_image(dict_dest, dict_gfx, entry_filepath, entry, sub_dest):
     # Declare variables
     global created_images
     global updated_images
     global unchanged_images
 
     dest_filename: str = get_png_name(entry)
-    dest_filepath: str = os.path.join(DESTINATION, dest_filename)
-    dest_safe_filepath: str = os.path.join(DESTINATION, "safe_images", dest_filename)
+    dest_filepath: str = os.path.join(sub_dest, dest_filename)
+    dest_safe_filepath: str = os.path.join(sub_dest, "safe_images", dest_filename)
 
     # Handle the image
     if not os.path.exists(dest_filepath):
