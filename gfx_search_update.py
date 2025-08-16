@@ -18,7 +18,8 @@ purged_images = 0
 
 ###
 ### Main Functions
-### 
+###
+
 
 def main():
     print("Script launched.\n")
@@ -60,9 +61,10 @@ def main():
 
 
 def fill_dict_gfx(dict_gfx: dict, filename):
+    filepath = os.path.join(TNO_FOLDER, filename)
     # Proccess all the entries in a gfx file
     try:
-        with open(filename, "r") as file:
+        with open(filepath, "r") as file:
             open_bracket: bool = True
             entry_filename: str = ""
             entry_gfx_name: str = ""
@@ -90,6 +92,7 @@ def fill_dict_gfx(dict_gfx: dict, filename):
 
     except FileNotFoundError:
         print(f"Error: Cannot find '{filename}'.")
+
 
 def update_destination(dict_gfx: dict):
     # Create an empty dictionary based on the destination folder
@@ -156,14 +159,16 @@ def update_dest_image(dict_dest, dict_gfx, entry_filepath, entry):
         elif action == 2:
             unchanged_images += 1
 
+
 ###
 ### Helper Functions
-### 
+###
 def get_png_name(filename: str):
     if filename[-4:] == ".png":
         return filename
     else:
         return filename.split(".")[0] + ".png"
+
 
 def magick(source_image: str, dest_image: str):
     result = subprocess.run(["magick", source_image, dest_image])
