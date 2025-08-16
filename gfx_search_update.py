@@ -11,14 +11,26 @@ import json
 GFX_NAME = "gfx_name"
 FILEPATH = "filepath"
 
+updated_images = 0
+unchanged_images = 0
+created_images = 0
+purged_images = 0
+
+###
+### Main Functions
+### 
 
 def main():
-    # Create an empty dictionary
-    json_from_gfx: dict = {}
+    print("Script launched.\n")
+
+    # Create an empty dictionary based on the .gfx files
+    dict_gfx: dict = {}
 
     # Scan through all National Focus .gfx files and add entry for them in dictionary, using filename as entry name and containing gfx_name and filepath
+    print("Scanning through .gfx files.")
     for filename in SOURCES:
-        fill_json_from_gfx(json_from_gfx, filename)
+        fill_dict_gfx(dict_gfx, filename)
+    print(f"Scan complete. {len(dict_gfx)} images found.\n")
 
     # Create directory "safe_images" in destination folder
     try:
@@ -30,18 +42,24 @@ def main():
         pass
 
     # Update the destination folder
-    json_from_destination: dict = update_destination(json_from_gfx)
+    print("Beginning update proccess.")
+    dict_dest: dict = update_destination(dict_gfx)
+    print("Update proccess finished.\n")
 
     # Write dictionary as JSON file
     with open("images.json", "w") as json_file:
-        json.dump(
-            json_from_destination, json_file, indent=4
-        )  # indent for pretty-printing
+        json.dump(dict_dest, json_file, indent=4)
+    print("Created JSON file of images in destination folder.\n")
 
-    # This will update the destination folder while purging unused images, and create a JSON file that associates each image with its gfx_name
+    # Log output
+    print("Script complete.")
+    print(f" - {updated_images} images updated.")
+    print(f" - {created_images} new images added.")
+    print(f" - {unchanged_images} images unchanged.")
+    print(f" - {purged_images} images purged.")
 
 
-def fill_json_from_gfx(json_from_gfx: dict, filename):
+def fill_dict_gfx(dict_gfx: dict, filename):
     # Proccess all the entries in a gfx file
     try:
         with open(filename, "r") as file:
@@ -57,7 +75,7 @@ def fill_json_from_gfx(json_from_gfx: dict, filename):
                 elif line[-1] == "}":
                     if open_bracket:
                         open_bracket = False
-                        json_from_gfx[entry_filename] = {
+                        dict_gfx[entry_filename] = {
                             GFX_NAME: entry_gfx_name,
                             FILEPATH: entry_filepath,
                         }
@@ -73,46 +91,17 @@ def fill_json_from_gfx(json_from_gfx: dict, filename):
     except FileNotFoundError:
         print(f"Error: Cannot find '{filename}'.")
 
+def update_destination(dict_gfx: dict):
+    # Create an empty dictionary based on the destination folder
+    dict_dest: dict = {}
 
-def get_png_name(filename: str):
-    if filename[-4:] == ".png":
-        return filename
-    else:
-        return filename.split(".")[0] + ".png"
+    global purged_images
 
-
-def update_destination(json_from_gfx: dict):
-    # Create a new empty dictionary for destination
-    json_from_destination: dict = {}
-
-    # For every entry in dictionary, compare date_modified of entry to date_modified in destination
-    for entry in json_from_gfx:
-        entry_filepath: str = os.path.join(TNO_FOLDER, json_from_gfx[entry][FILEPATH])
-        destination_filename: str = get_png_name(entry)
-        destination_filepath: str = os.path.join(DESTINATION, destination_filename)
-        dest_safe_filepath: str = os.path.join(
-            DESTINATION, "safe_images", destination_filename
-        )
-        # Image in .gfx file does not exist
-        if not os.path.exists(entry_filepath):
-            continue
-        else:
-            # Image is not in destination folder
-            if not os.path.exists(destination_filepath):
-                exit_code = magick(entry_filepath, dest_safe_filepath)
-            # Image in destination folder is outdated
-            elif os.path.getmtime(entry_filepath) > os.path.getmtime(destination_filepath):
-                exit_code = magick(entry_filepath, dest_safe_filepath)
-            # Image in destination folder is up to date
-            else:
-                shutil.move(destination_filepath, dest_safe_filepath)
-                exit_code = 0
-            
-            if (exit_code == 0):
-                json_from_destination[destination_filename] = {
-                    GFX_NAME: json_from_gfx[entry][GFX_NAME],
-                    FILEPATH: destination_filepath,
-                }
+    # Update the destination folder to have up-to-date images, move them to safe_images
+    for entry in dict_gfx:
+        entry_filepath: str = os.path.join(TNO_FOLDER, dict_gfx[entry][FILEPATH])
+        if os.path.exists(entry_filepath):
+            update_dest_image(dict_dest, dict_gfx, entry_filepath, entry)
 
     # Delete all files in destination not in safe_images
     for damned_file in os.listdir(DESTINATION):
@@ -123,15 +112,61 @@ def update_destination(json_from_gfx: dict):
     # Move all files from safe_images to destination
     for saved_filename in os.listdir(os.path.join(DESTINATION, "safe_images")):
         saved_filepath = os.path.join(DESTINATION, "safe_images", saved_filename)
-        shutil.move(saved_filepath, json_from_destination[saved_filename][FILEPATH])
+        shutil.move(saved_filepath, dict_dest[saved_filename][FILEPATH])
 
     # Delete safe_images
     os.rmdir(os.path.join(DESTINATION, "safe_images"))
 
-    return json_from_destination
+    return dict_dest
 
-def magick(source_image: str, destination_image: str):
-    result = subprocess.run(["magick", source_image, destination_image])
+
+def update_dest_image(dict_dest, dict_gfx, entry_filepath, entry):
+    # Declare variables
+    global created_images
+    global updated_images
+    global unchanged_images
+
+    dest_filename: str = get_png_name(entry)
+    dest_filepath: str = os.path.join(DESTINATION, dest_filename)
+    dest_safe_filepath: str = os.path.join(DESTINATION, "safe_images", dest_filename)
+
+    # Handle the image
+    if not os.path.exists(dest_filepath):
+        exit_code = magick(entry_filepath, dest_safe_filepath)
+        action = 0
+    elif os.path.getmtime(entry_filepath) > os.path.getmtime(dest_filepath):
+        exit_code = magick(entry_filepath, dest_safe_filepath)
+        action = 1
+    else:
+        shutil.move(dest_filepath, dest_safe_filepath)
+        exit_code = 0
+        action = 2
+
+    # Update dictionary and log if handling successful
+    if exit_code == 0:
+        dict_dest[dest_filename] = {
+            GFX_NAME: dict_gfx[entry][GFX_NAME],
+            FILEPATH: dest_filepath,
+        }
+
+        if action == 0:
+            created_images += 1
+        elif action == 1:
+            updated_images += 1
+        elif action == 2:
+            unchanged_images += 1
+
+###
+### Helper Functions
+### 
+def get_png_name(filename: str):
+    if filename[-4:] == ".png":
+        return filename
+    else:
+        return filename.split(".")[0] + ".png"
+
+def magick(source_image: str, dest_image: str):
+    result = subprocess.run(["magick", source_image, dest_image])
     return result.returncode
 
 
