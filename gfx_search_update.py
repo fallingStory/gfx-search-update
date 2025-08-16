@@ -15,6 +15,7 @@ updated_images = 0
 unchanged_images = 0
 created_images = 0
 purged_images = 0
+failed_images = 0
 
 ###
 ### Main Functions
@@ -34,7 +35,9 @@ def main():
         print(f"Scanning through .gfx files for '{category_key}'")
         for filename in category:
             fill_dict_gfx(dict_gfx[category_key], filename)
-        print(f"Scan complete for '{category_key}'. {len(dict_gfx[category_key])} images found.\n")
+        print(
+            f"Scan complete for '{category_key}'. {len(dict_gfx[category_key])} images found.\n"
+        )
 
     dict_dest: dict = {}
     for category_key in SOURCES:
@@ -65,6 +68,7 @@ def main():
     print(f" - {created_images} new images added.")
     print(f" - {unchanged_images} images unchanged.")
     print(f" - {purged_images} images purged.")
+    print(f" - {failed_images} images could not be converted.")
 
 
 def fill_dict_gfx(dict_gfx: dict, filename):
@@ -139,6 +143,7 @@ def update_dest_image(dict_dest, dict_gfx, entry_filepath, entry, sub_dest):
     global created_images
     global updated_images
     global unchanged_images
+    global failed_images
 
     dest_filename: str = get_png_name(entry)
     dest_filepath: str = os.path.join(sub_dest, dest_filename)
@@ -169,6 +174,8 @@ def update_dest_image(dict_dest, dict_gfx, entry_filepath, entry, sub_dest):
             updated_images += 1
         elif action == 2:
             unchanged_images += 1
+    else:
+        failed_images += 1
 
 
 ###
