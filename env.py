@@ -1,0 +1,84 @@
+TNO_FOLDER = ""
+DESTINATION = ""
+
+GOALS = [
+    "interface/USA/TNO_USA_goals.gfx",
+    "interface/Moskowien/TNO_Moskowien_goals.gfx",
+    "interface/Russia/TNO_Chita_goals.gfx",
+    "interface/Russia/TNO_Komi_goals.gfx",
+    "interface/Russia/TNO_Ural_League_goals.gfx",
+    "interface/Russia/TNO_Buryatia_goals.gfx",
+    "interface/Russia/TNO_WRRF_goals.gfx",
+    "interface/Russia/TNO_Kemerovo_goals.gfx",
+    "interface/Russia/TNO_Samara_goals.gfx",
+    "interface/Russia/TNO_Irkutsk_goals.gfx",
+    "interface/Russia/TNO_Sverdlovsk_goals.gfx",
+    "interface/Russia/TNO_Tomsk_goals.gfx",
+    "interface/Russia/TNO_Vyatka_goals.gfx",
+    "interface/Russia/TNO_Tyumen_goals.gfx",
+    "interface/Russia/TNO_Dirlewanger_goals.gfx",
+    "interface/Russia/TNO_Zlatoust_goals.gfx",
+    "interface/Russia/TNO_Russia_goals.gfx",
+    "interface/Russia/TNO_Aryan_Brotherhood_goals.gfx",
+    "interface/Russia/TNO_Orenburg_goals.gfx",
+    "interface/Russia/TNO_Omsk_goals.gfx",
+    "interface/Russia/TNO_Magnitogorsk_goals.gfx",
+    "interface/Russia/TNO_Magadan_goals.gfx",
+    "interface/Russia/TNO_Amur_goals.gfx",
+    "interface/Russia/TNO_Novosibirsk_goals.gfx",
+    "interface/Russia/TNO_Onega_goals.gfx",
+    "interface/Russia/Omolon_2022/TNO_Omolon_2022_goals.gfx",
+    "interface/Russia/TNO_SBA_goals.gfx",
+    "interface/TNO_Ostland_goals.gfx",
+    "interface/Brazil/TNO_Brazil_goals.gfx",
+    "interface/Ukraine/TNO_Ukraine_goals.gfx",
+    "interface/Iberia/TNO_Iberia_goals.gfx",
+    "interface/Germany/TNO_GER_goals.gfx",
+    "interface/Ireland/TNO_Ireland_goals.gfx",
+    "interface/TNO_Chile_goals.gfx",
+    "interface/TNO_Canada_goals.gfx",
+    "interface/Britain_OLD/TNO_Wales_goals.gfx",
+    "interface/Britain_OLD/TNO_England_OLD_goals.gfx",
+    "interface/Britain_OLD/TNO_Scotland_goals.gfx",
+    "interface/Guangdong/TNO_GNG_goals.gfx",
+    "interface/TNO_Poland_goals.gfx",
+    "interface/Japan/TNO_Japan_goals.gfx",
+    "interface/TNO_Norway_goals.gfx",
+    "interface/Burgundy/TNO_Burgundy_goals.gfx",
+    "interface/TNO_China_goals.gfx",
+    "interface/Manchuria/TNO_Manchukuo_goals.gfx",
+    "interface/Mexico/TNO_Mexico_goals.gfx",
+    "interface/TNO_Yunnan_goals.gfx",
+    "interface/Italy/TNO_Italy_OLD_goals.gfx",
+    "interface/TNO_Australia_goals.gfx",
+    "interface/Africa/TNO_OFN_Africa_goals.gfx",
+    "interface/Africa/TNO_South_Africa_goals.gfx",
+    "interface/Africa/TNO_Sudwestafrika_goals.gfx",
+    "interface/Africa/TNO_Zentralafrika_goals.gfx",
+    "interface/Africa/TNO_Ostafrika_goals.gfx",
+    "interface/Britain/TNO_Britain_goals.gfx",
+]
+IDEAS = ["interface/TNO_ideas.gfx"]
+EVENT_PICTURES = ["interface/eventpictures.gfx"]
+NEWS_EVENTS = ["interface/TNO_news_events.gfx"]
+MINISTERS = ["interface/TNO_ministers.gfx"]
+TEXT_ICONS = [
+    "interface/Russia/TNO_Russia_Texticons.gfx",
+    "interface/Antarctica/TNO_Antarctica_texticons.gfx",
+    "interface/texticons.gfx",
+    "interface/TNO_fopo_texticons.gfx",
+    "interface/Britain/TNO_Britain_Texticons.gfx",
+]
+DECISION_ICONS = ["interface/decisions.gfx"]
+DECISION_IMAGES = ["interface/decision_pictures.gfx"]
+
+SOURCES = {
+    "goals": GOALS,
+    "ideas": IDEAS,
+    "events": EVENT_PICTURES,
+    "news_events": NEWS_EVENTS,
+    "ministers": MINISTERS,
+    "texticons": TEXT_ICONS,
+    "decision_icons": DECISION_ICONS,
+    "decision_image": DECISION_IMAGES,
+}
