@@ -1,6 +1,3 @@
-TNO_FOLDER = ""
-DESTINATION = ""
-
 GOALS = [
     "interface/USA/TNO_USA_goals.gfx",
     "interface/Moskowien/TNO_Moskowien_goals.gfx",
@@ -82,3 +79,4 @@ SOURCES = {
     "decision_icons": DECISION_ICONS,
     "decision_image": DECISION_IMAGES,
 }
+

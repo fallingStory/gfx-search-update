@@ -1,5 +1,6 @@
 # Custom imports
-from env import TNO_FOLDER, SOURCES, DESTINATION
+from env import TNO_FOLDER, DESTINATION
+from public import SOURCES
 
 # Imports
 import os
