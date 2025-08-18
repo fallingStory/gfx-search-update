@@ -1,5 +1,5 @@
 # Custom imports
-from env import TNO_FOLDER, DESTINATION
+from env import TNO_FOLDER, DESTINATION, DESTINATION_RELATIVE, JSON_DESTINATION
 from public import SOURCES
 
 # Imports
@@ -43,6 +43,7 @@ def main():
     dict_dest: dict = {}
     for category_key in SOURCES:
         sub_dest = os.path.join(DESTINATION, category_key)
+        sub_dest_rel = os.path.join(DESTINATION_RELATIVE, category_key)
         if not os.path.exists(sub_dest):
             try:
                 os.mkdir(sub_dest)
@@ -51,15 +52,19 @@ def main():
                 return
 
         # Create directory "safe_images" in destination folder
-        os.mkdir(os.path.join(sub_dest, "safe_images"))
+        try:
+            os.mkdir(os.path.join(sub_dest, "safe_images"))
+        except FileExistsError:
+            print(f"Error! 'safe_images' already exists in {category_key}. Ensure folder contains no items and delete it.")
+            return
 
         # Update the destination folder
         print(f"Beginning update proccess for '{category_key}'.")
-        dict_dest[category_key] = update_destination(dict_gfx[category_key], sub_dest)
+        dict_dest[category_key] = update_destination(dict_gfx[category_key], sub_dest, sub_dest_rel)
         print(f"Update proccess for '{category_key}' finished.\n")
 
     # Write dictionary as JSON file
-    with open("images.json", "w") as json_file:
+    with open(os.path.join(JSON_DESTINATION, "images.json"), "w") as json_file:
         json.dump(dict_dest, json_file, indent=4)
     print("Created JSON file of images in destination folder.\n")
 
@@ -110,7 +115,7 @@ def fill_dict_gfx(dict_gfx: dict, filename):
         print(f"Error: Cannot find '{filename}'.")
 
 
-def update_destination(dict_gfx: dict, sub_dest: str):
+def update_destination(dict_gfx: dict, sub_dest: str, sub_dest_rel: str):
     # Create an empty dictionary based on the destination folder
     dict_dest: dict = {}
 
@@ -120,7 +125,7 @@ def update_destination(dict_gfx: dict, sub_dest: str):
     for entry in dict_gfx:
         entry_filepath: str = os.path.join(TNO_FOLDER, dict_gfx[entry][FILEPATH])
         if os.path.exists(entry_filepath):
-            update_dest_image(dict_dest, dict_gfx, entry_filepath, entry, sub_dest)
+            update_dest_image(dict_dest, dict_gfx, entry_filepath, entry, sub_dest, sub_dest_rel)
 
     # Delete all files in destination not in safe_images
     for damned_file in os.listdir(sub_dest):
@@ -131,7 +136,8 @@ def update_destination(dict_gfx: dict, sub_dest: str):
     # Move all files from safe_images to destination
     for saved_filename in os.listdir(os.path.join(sub_dest, "safe_images")):
         saved_filepath = os.path.join(sub_dest, "safe_images", saved_filename)
-        shutil.move(saved_filepath, dict_dest[saved_filename][FILEPATH])
+        correct_filepath = os.path.join(sub_dest, saved_filename)
+        shutil.move(saved_filepath, correct_filepath)
 
     # Delete safe_images
     os.rmdir(os.path.join(sub_dest, "safe_images"))
@@ -139,7 +145,7 @@ def update_destination(dict_gfx: dict, sub_dest: str):
     return dict_dest
 
 
-def update_dest_image(dict_dest, dict_gfx, entry_filepath, entry, sub_dest):
+def update_dest_image(dict_dest, dict_gfx, entry_filepath, entry, sub_dest, sub_dest_rel):
     # Declare variables
     global created_images
     global updated_images
@@ -148,6 +154,7 @@ def update_dest_image(dict_dest, dict_gfx, entry_filepath, entry, sub_dest):
 
     dest_filename: str = get_png_name(entry)
     dest_filepath: str = os.path.join(sub_dest, dest_filename)
+    sub_dest_filepath = os.path.join(sub_dest_rel, dest_filename)
     dest_safe_filepath: str = os.path.join(sub_dest, "safe_images", dest_filename)
 
     # Handle the image
@@ -166,7 +173,7 @@ def update_dest_image(dict_dest, dict_gfx, entry_filepath, entry, sub_dest):
     if exit_code == 0:
         dict_dest[dest_filename] = {
             GFX_NAME: dict_gfx[entry][GFX_NAME],
-            FILEPATH: dest_filepath,
+            FILEPATH: sub_dest_filepath,
         }
 
         if action == 0:
